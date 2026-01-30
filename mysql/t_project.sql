@@ -4,7 +4,7 @@ create table `t_project`
 (
     `id` BIGINT not null auto_increment comment 'id',
     `name` varchar(255) not null comment '项目名称',
-    `database` varchar(255) not null comment '项目数据库',
+    `mark` varchar(255) not null comment '项目标识',
     `version` varchar(255) default 'v0.0.1' comment '项目版本',
     `type` varchar(255) not null comment '项目类型，APP,WEB,Windows',
     `sort` int(0) NOT NULL DEFAULT 0 COMMENT '排序',
