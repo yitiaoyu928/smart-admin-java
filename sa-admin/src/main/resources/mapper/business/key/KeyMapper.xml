@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.lab1024.sa.admin.module.business.key.dao.KeyDao">
+
+    <!-- 查询项目密钥列表 -->
+    <select id="queryKey" resultType="net.lab1024.sa.admin.module.business.key.domain.vo.KeyVO">
+        SELECT
+            k.id,
+            k.project_id,
+            p.name AS project_name,
+            k.key,
+            k.cycle_type,
+            k.disabled_flag,
+            k.using_flag,
+            k.using_time,
+            k.expire_time,
+            k.remark,
+            k.create_time,
+            k.update_time
+        FROM t_key k
+        LEFT JOIN t_project p ON k.project_id = p.id
+        <where>
+            k.deleted_flag = #{queryForm.deletedFlag}
+            <if test="queryForm.keyword != null and queryForm.keyword != ''">
+                AND (
+                k.key LIKE CONCAT('%', #{queryForm.keyword}, '%')
+                OR p.name LIKE CONCAT('%', #{queryForm.keyword}, '%')
+                )
+            </if>
+            <if test="queryForm.projectId != null">
+                AND k.project_id = #{queryForm.projectId}
+            </if>
+            <if test="queryForm.cycleType != null and queryForm.cycleType != ''">
+                AND k.cycle_type = #{queryForm.cycleType}
+            </if>
+            <if test="queryForm.disabledFlag != null">
+                AND k.disabled_flag = #{queryForm.disabledFlag}
+            </if>
+            <if test="queryForm.usingFlag != null">
+                AND k.using_flag = #{queryForm.usingFlag}
+            </if>
+            <if test="queryForm.usingTimeBegin != null">
+                AND k.using_time &gt;= #{queryForm.usingTimeBegin}
+            </if>
+            <if test="queryForm.usingTimeEnd != null">
+                AND k.using_time &lt;= #{queryForm.usingTimeEnd}
+            </if>
+            <if test="queryForm.expireTimeBegin != null">
+                AND k.expire_time &gt;= #{queryForm.expireTimeBegin}
+            </if>
+            <if test="queryForm.expireTimeEnd != null">
+                AND k.expire_time &lt;= #{queryForm.expireTimeEnd}
+            </if>
+        </where>
+        ORDER BY k.id DESC
+    </select>
+
+    <!-- 更新禁用状态 -->
+    <update id="updateDisableFlag">
+        UPDATE t_key
+        SET disabled_flag = #{disabledFlag}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 批量更新删除状态 -->
+    <update id="batchUpdateDeleted">
+        UPDATE t_key
+        SET deleted_flag = #{deletedFlag}
+        WHERE id IN
+        <foreach collection="idList" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+</mapper>
