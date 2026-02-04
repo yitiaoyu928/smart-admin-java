@@ -44,6 +44,9 @@ public class KeyQueryForm extends PageParam {
     @Schema(description = "过期时间结束")
     private LocalDateTime expireTimeEnd;
 
+    @Schema(description = "状态：0=正常,1=过期")
+    private Integer status;
+
     @Schema(description = "删除标识", hidden = true)
     private Boolean deletedFlag;
 

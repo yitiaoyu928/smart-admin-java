@@ -1,6 +1,7 @@
 package net.lab1024.sa.admin.module.business.key.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -28,6 +29,7 @@ public class KeyEntity {
     /**
      * 密钥
      */
+    @TableField("`key`")
     private String key;
 
     /**
@@ -59,6 +61,11 @@ public class KeyEntity {
      * 过期时间
      */
     private LocalDateTime expireTime;
+
+    /**
+     * 状态：0=正常,1=过期
+     */
+    private Integer status;
 
     /**
      * 备注

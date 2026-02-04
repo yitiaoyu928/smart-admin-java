@@ -41,6 +41,9 @@ public class KeyVO {
     @Schema(description = "过期时间")
     private LocalDateTime expireTime;
 
+    @Schema(description = "状态：0=正常,1=过期")
+    private Integer status;
+
     @Schema(description = "备注")
     private String remark;
 

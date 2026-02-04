@@ -64,4 +64,17 @@ public class KeyController {
         return keyService.batchUpdateDeleteFlag(idList);
     }
 
+    @Operation(summary = "重置密钥")
+    @GetMapping("/key/reset/{id}")
+    @SaCheckPermission("business:key:reset")
+    public ResponseDTO<String> resetKey(@PathVariable Long id) {
+        return keyService.resetKey(id);
+    }
+
+    @Operation(summary = "使用密钥")
+    @GetMapping("/key/use")
+    public ResponseDTO<KeyVO> useKey(@RequestParam String key) {
+        return keyService.useKey(key);
+    }
+
 }

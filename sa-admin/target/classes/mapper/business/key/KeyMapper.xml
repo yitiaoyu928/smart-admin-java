@@ -14,7 +14,6 @@
             k.using_flag,
             k.using_time,
             k.expire_time,
-            k.status,
             k.remark,
             k.create_time,
             k.update_time
@@ -51,9 +50,6 @@
             </if>
             <if test="queryForm.expireTimeEnd != null">
                 AND k.expire_time &lt;= #{queryForm.expireTimeEnd}
-            </if>
-            <if test="queryForm.status != null">
-                AND k.status = #{queryForm.status}
             </if>
         </where>
         ORDER BY k.id DESC

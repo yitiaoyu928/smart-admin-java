@@ -33,6 +33,7 @@ create table `t_key`
     `using_flag`    tinyint                                                       NOT NULL DEFAULT 0 COMMENT '是否使用',
     `using_time`    datetime(0) comment '使用时间',
     `expire_time`   timestamp(0) comment '过期时间',
+    `status`        tinyint NOT NULL DEFAULT 0 comment '状态：0=正常,1=过期',
     `remark`        varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL     DEFAULT NULL,
     `update_time`   datetime(0)                                                   NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP(0),
     `create_time`   datetime(0)                                                   NOT NULL DEFAULT CURRENT_TIMESTAMP,

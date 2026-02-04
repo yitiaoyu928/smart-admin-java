@@ -49,4 +49,14 @@ public interface KeyService {
      */
     KeyEntity getById(Long id);
 
+    /**
+     * 重置密钥
+     */
+    ResponseDTO<String> resetKey(Long id);
+
+    /**
+     * 使用密钥
+     */
+    ResponseDTO<KeyVO> useKey(String key);
+
 }
