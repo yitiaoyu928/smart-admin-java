@@ -6,6 +6,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="sa-user" />
         <module name="sa-base" />
         <module name="sa-admin" />
       </profile>
@@ -16,6 +17,7 @@
       <module name="sa-admin" options="-parameters" />
       <module name="sa-base" options="-parameters" />
       <module name="sa-parent" options="-parameters" />
+      <module name="sa-user" options="-parameters" />
     </option>
   </component>
 </project>
