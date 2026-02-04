@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.lab1024.sa.admin.module.business.project.dao.ProjectDao">
+
+    <!-- 查询项目列表 -->
+    <select id="queryProject" resultType="net.lab1024.sa.admin.module.business.project.domain.vo.ProjectVO">
+        SELECT
+            id,
+            name,
+            mark,
+            version,
+            type,
+            sort,
+            disabled_flag,
+            remark,
+            create_time,
+            update_time
+        FROM t_project
+        <where>
+            deleted_flag = #{queryForm.deletedFlag}
+            <if test="queryForm.keyword != null and queryForm.keyword != ''">
+                AND (
+                name LIKE CONCAT('%', #{queryForm.keyword}, '%')
+                OR mark LIKE CONCAT('%', #{queryForm.keyword}, '%')
+                )
+            </if>
+            <if test="queryForm.type != null and queryForm.type != ''">
+                AND type = #{queryForm.type}
+            </if>
+            <if test="queryForm.disabledFlag != null">
+                AND disabled_flag = #{queryForm.disabledFlag}
+            </if>
+        </where>
+        ORDER BY sort ASC, id DESC
+    </select>
+
+    <!-- 查询所有项目 -->
+    <select id="selectProjectByDisabledAndDeleted" resultType="net.lab1024.sa.admin.module.business.project.domain.vo.ProjectVO">
+        SELECT
+            id,
+            name,
+            mark,
+            version,
+            type,
+            sort,
+            disabled_flag,
+            remark,
+            create_time,
+            update_time
+        FROM t_project
+        <where>
+            deleted_flag = #{deletedFlag}
+            <if test="disabledFlag != null">
+                AND disabled_flag = #{disabledFlag}
+            </if>
+        </where>
+        ORDER BY sort ASC, id DESC
+    </select>
+
+    <!-- 更新禁用状态 -->
+    <update id="updateDisableFlag">
+        UPDATE t_project
+        SET disabled_flag = #{disabledFlag}
+        WHERE id = #{id}
+    </update>
+
+</mapper>
