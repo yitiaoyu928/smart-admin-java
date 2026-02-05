@@ -181,8 +181,6 @@ public class KeyServiceImpl implements KeyService {
                 return ResponseDTO.userErrorParam("密钥周期类型无效");
         }
 
-        // 获取当前登录用户ID（从请求上下文中获取）
-        Long userId = SmartRequestUtil.getRequestUserId();
         Long projectId = keyEntity.getProjectId();
 
         // 更新使用状态、使用时间、过期时间、状态
@@ -194,7 +192,7 @@ public class KeyServiceImpl implements KeyService {
         updateEntity.setStatus(0); // 0=正常
         keyDao.updateById(updateEntity);
 
-        log.info("密钥激活成功: 密钥ID={}, 项目ID={}, 用户ID={}, 过期时间={}", keyEntity.getId(), projectId, userId, expireTime);
+        log.info("密钥激活成功: 密钥ID={}, 项目ID={}, 过期时间={}", keyEntity.getId(), projectId, expireTime);
 
         // 返回更新后的密钥信息
         KeyVO keyVO = SmartBeanUtil.copy(keyEntity, KeyVO.class);
