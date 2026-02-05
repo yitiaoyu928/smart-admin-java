@@ -31,7 +31,7 @@ public class KeyServiceImpl implements KeyService {
     private KeyDao keyDao;
 
     @Override
-    public ResponseDTO<String> resetKey(String currentKey) {
+    public ResponseDTO<String> resetKey(String currentKey, Long projectId) {
         // 根据当前密钥查询密钥信息
         LambdaQueryWrapper<KeyEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(KeyEntity::getKey, currentKey)
@@ -41,6 +41,12 @@ public class KeyServiceImpl implements KeyService {
         if (keyEntity == null) {
             log.warn("密钥重置失败，密钥不存在: {}", currentKey);
             return ResponseDTO.userErrorParam("密钥不存在");
+        }
+
+        // 验证项目ID是否匹配
+        if (!keyEntity.getProjectId().equals(projectId)) {
+            log.warn("密钥重置失败，项目ID不匹配: 密钥项目ID={}, 传入项目ID={}", keyEntity.getProjectId(), projectId);
+            return ResponseDTO.userErrorParam("密钥与项目不匹配");
         }
 
         // 生成新的随机密钥：6位随机字符 + UUID(无横线)
@@ -75,7 +81,48 @@ public class KeyServiceImpl implements KeyService {
         updateEntity.setKey(newKey);
         keyDao.updateById(updateEntity);
 
-        log.info("密钥重置成功: 密钥ID={}, 旧密钥={}, 新密钥={}", keyEntity.getId(), currentKey, newKey);
+        log.info("密钥重置成功: 密钥ID={}, 项目ID={}, 旧密钥={}, 新密钥={}", keyEntity.getId(), projectId, currentKey, newKey);
+
+        return ResponseDTO.ok(newKey);
+    }
+
+    @Override
+    public ResponseDTO<String> updateKey(String oldKey, String newKey, Long projectId) {
+        // 根据旧密钥查询密钥信息
+        LambdaQueryWrapper<KeyEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(KeyEntity::getKey, oldKey)
+                .eq(KeyEntity::getDeletedFlag, false);
+        KeyEntity keyEntity = keyDao.selectOne(queryWrapper);
+
+        if (keyEntity == null) {
+            log.warn("密钥更新失败，旧密钥不存在: {}", oldKey);
+            return ResponseDTO.userErrorParam("旧密钥不存在");
+        }
+
+        // 验证项目ID是否匹配
+        if (!keyEntity.getProjectId().equals(projectId)) {
+            log.warn("密钥更新失败，项目ID不匹配: 密钥项目ID={}, 传入项目ID={}", keyEntity.getProjectId(), projectId);
+            return ResponseDTO.userErrorParam("密钥与项目不匹配");
+        }
+
+        // 检查新密钥是否已存在
+        LambdaQueryWrapper<KeyEntity> checkWrapper = new LambdaQueryWrapper<>();
+        checkWrapper.eq(KeyEntity::getKey, newKey)
+                .eq(KeyEntity::getDeletedFlag, false)
+                .ne(KeyEntity::getId, keyEntity.getId());
+        KeyEntity existKey = keyDao.selectOne(checkWrapper);
+        if (existKey != null) {
+            log.warn("密钥更新失败，新密钥已存在: {}", newKey);
+            return ResponseDTO.userErrorParam("新密钥已存在");
+        }
+
+        // 更新密钥
+        KeyEntity updateEntity = new KeyEntity();
+        updateEntity.setId(keyEntity.getId());
+        updateEntity.setKey(newKey);
+        keyDao.updateById(updateEntity);
+
+        log.info("密钥更新成功: 密钥ID={}, 项目ID={}, 旧密钥={}, 新密钥={}", keyEntity.getId(), projectId, oldKey, newKey);
 
         return ResponseDTO.ok(newKey);
     }
@@ -160,38 +207,38 @@ public class KeyServiceImpl implements KeyService {
     }
 
     @Override
-    public ResponseDTO<KeyVO> getUserActivatedKey(Long projectId) {
-        // 获取当前登录用户ID
-        Long userId = SmartRequestUtil.getRequestUserId();
-
-        // 查询该用户在该项目下已激活且未过期的密钥
+    public ResponseDTO<KeyVO> getKey(String key, Long projectId) {
+        // 根据密钥查询密钥信息
         LambdaQueryWrapper<KeyEntity> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(KeyEntity::getProjectId, projectId)
-                .eq(KeyEntity::getDeletedFlag, false)
-                .eq(KeyEntity::getUsingFlag, true)
-                .eq(KeyEntity::getStatus, 0); // 0=正常
-
-        // 获取第一个匹配的密钥
+        queryWrapper.eq(KeyEntity::getKey, key)
+                .eq(KeyEntity::getDeletedFlag, false);
         KeyEntity keyEntity = keyDao.selectOne(queryWrapper);
 
         if (keyEntity == null) {
-            return ResponseDTO.ok();
+            log.warn("密钥查询失败，密钥不存在: {}", key);
+            return ResponseDTO.userErrorParam("密钥不存在");
         }
+
+        // 验证项目ID是否匹配
+        if (!keyEntity.getProjectId().equals(projectId)) {
+            log.warn("密钥查询失败，项目ID不匹配: 密钥项目ID={}, 传入项目ID={}", keyEntity.getProjectId(), projectId);
+            return ResponseDTO.userErrorParam("密钥与项目不匹配");
+        }
+
+        KeyVO keyVO = SmartBeanUtil.copy(keyEntity, KeyVO.class);
 
         // 检查是否已过期
         if (keyEntity.getExpireTime() != null && keyEntity.getExpireTime().isBefore(LocalDateTime.now())) {
             // 更新状态为已过期
-            KeyEntity updateEntity = new KeyEntity();
-            updateEntity.setId(keyEntity.getId());
-            updateEntity.setStatus(1); // 1=过期
-            keyDao.updateById(updateEntity);
-
-            KeyVO keyVO = SmartBeanUtil.copy(keyEntity, KeyVO.class);
-            keyVO.setStatus(1);
-            return ResponseDTO.ok(keyVO);
+            if (keyEntity.getStatus() != 1) {
+                KeyEntity updateEntity = new KeyEntity();
+                updateEntity.setId(keyEntity.getId());
+                updateEntity.setStatus(1); // 1=过期
+                keyDao.updateById(updateEntity);
+                keyVO.setStatus(1);
+            }
         }
 
-        KeyVO keyVO = SmartBeanUtil.copy(keyEntity, KeyVO.class);
         return ResponseDTO.ok(keyVO);
     }
 

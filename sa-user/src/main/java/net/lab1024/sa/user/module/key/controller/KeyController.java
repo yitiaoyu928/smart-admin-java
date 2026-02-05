@@ -33,14 +33,20 @@ public class KeyController {
 
     @PostMapping("/reset")
     @Operation(summary = "重置密钥")
-    public ResponseDTO<String> resetKey(@RequestParam String key) {
-        return keyService.resetKey(key);
+    public ResponseDTO<String> resetKey(@RequestParam String key, @RequestParam Long projectId) {
+        return keyService.resetKey(key, projectId);
     }
 
-    @GetMapping("/activated")
-    @Operation(summary = "查询用户已激活的密钥")
-    public ResponseDTO<KeyVO> getUserActivatedKey(@RequestParam Long projectId) {
-        return keyService.getUserActivatedKey(projectId);
+    @PostMapping("/update")
+    @Operation(summary = "更新密钥")
+    public ResponseDTO<String> updateKey(@RequestParam String oldKey, @RequestParam String newKey, @RequestParam Long projectId) {
+        return keyService.updateKey(oldKey, newKey, projectId);
+    }
+
+    @GetMapping("/query")
+    @Operation(summary = "查询密钥")
+    public ResponseDTO<KeyVO> getKey(@RequestParam String key, @RequestParam Long projectId) {
+        return keyService.getKey(key, projectId);
     }
 
 }

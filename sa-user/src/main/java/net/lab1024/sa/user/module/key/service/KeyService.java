@@ -21,12 +21,17 @@ public interface KeyService {
     /**
      * 重置密钥
      */
-    ResponseDTO<String> resetKey(String currentKey);
+    ResponseDTO<String> resetKey(String currentKey, Long projectId);
 
     /**
-     * 查询用户已激活的密钥列表
+     * 更新密钥
      */
-    ResponseDTO<KeyVO> getUserActivatedKey(Long projectId);
+    ResponseDTO<String> updateKey(String oldKey, String newKey, Long projectId);
+
+    /**
+     * 查询密钥
+     */
+    ResponseDTO<KeyVO> getKey(String key, Long projectId);
 
     /**
      * 根据ID获取项目密钥
