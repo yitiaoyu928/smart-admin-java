@@ -1,5 +1,7 @@
 package net.lab1024.sa.user.module.key.service.impl;
 
+import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,56 @@ public class KeyServiceImpl implements KeyService {
 
     @Resource
     private KeyDao keyDao;
+
+    @Override
+    public ResponseDTO<String> resetKey(String currentKey) {
+        // 根据当前密钥查询密钥信息
+        LambdaQueryWrapper<KeyEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(KeyEntity::getKey, currentKey)
+                .eq(KeyEntity::getDeletedFlag, false);
+        KeyEntity keyEntity = keyDao.selectOne(queryWrapper);
+
+        if (keyEntity == null) {
+            log.warn("密钥重置失败，密钥不存在: {}", currentKey);
+            return ResponseDTO.userErrorParam("密钥不存在");
+        }
+
+        // 生成新的随机密钥：6位随机字符 + UUID(无横线)
+        String baseString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz";
+        String newKey;
+        int maxAttempts = 10;
+        int attempts = 0;
+
+        // 循环生成直到找到一个不重复的密钥
+        do {
+            String randomPrefix = RandomUtil.randomString(baseString, 6);
+            String uuidWithoutDash = IdUtil.fastSimpleUUID();
+            newKey = randomPrefix + uuidWithoutDash;
+            LambdaQueryWrapper<KeyEntity> checkWrapper = new LambdaQueryWrapper<>();
+            checkWrapper.eq(KeyEntity::getKey, newKey)
+                    .eq(KeyEntity::getDeletedFlag, false);
+            KeyEntity existKey = keyDao.selectOne(checkWrapper);
+            if (existKey == null) {
+                break;
+            }
+            attempts++;
+        } while (attempts < maxAttempts);
+
+        if (attempts >= maxAttempts) {
+            log.warn("密钥重置失败，生成新密钥失败，密钥ID: {}", keyEntity.getId());
+            return ResponseDTO.userErrorParam("密钥生成失败，请重试");
+        }
+
+        // 更新密钥
+        KeyEntity updateEntity = new KeyEntity();
+        updateEntity.setId(keyEntity.getId());
+        updateEntity.setKey(newKey);
+        keyDao.updateById(updateEntity);
+
+        log.info("密钥重置成功: 密钥ID={}, 旧密钥={}, 新密钥={}", keyEntity.getId(), currentKey, newKey);
+
+        return ResponseDTO.ok(newKey);
+    }
 
     @Override
     public ResponseDTO<KeyVO> activateKey(KeyActivationForm activationForm) {

@@ -31,6 +31,12 @@ public class KeyController {
         return keyService.activateKey(activationForm);
     }
 
+    @PostMapping("/reset")
+    @Operation(summary = "重置密钥")
+    public ResponseDTO<String> resetKey(@RequestParam String key) {
+        return keyService.resetKey(key);
+    }
+
     @GetMapping("/activated")
     @Operation(summary = "查询用户已激活的密钥")
     public ResponseDTO<KeyVO> getUserActivatedKey(@RequestParam Long projectId) {

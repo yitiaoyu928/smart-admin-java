@@ -19,6 +19,11 @@ public interface KeyService {
     ResponseDTO<KeyVO> activateKey(KeyActivationForm activationForm);
 
     /**
+     * 重置密钥
+     */
+    ResponseDTO<String> resetKey(String currentKey);
+
+    /**
      * 查询用户已激活的密钥列表
      */
     ResponseDTO<KeyVO> getUserActivatedKey(Long projectId);
