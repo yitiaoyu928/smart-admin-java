@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>WebSocket Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    #log { border: 1px solid #ddd; padding: 12px; height: 200px; overflow: auto; }
+    input, button { padding: 8px; margin-right: 8px; }
+  </style>
+</head>
+<body>
+  <h3>WebSocket STOMP 用例</h3>
+  <div>
+    <button id="connect">连接</button>
+    <button id="disconnect">断开</button>
+  </div>
+  <div style="margin-top:12px;">
+    <input id="message" type="text" placeholder="输入要发送的内容" />
+    <button id="send">发送</button>
+  </div>
+  <h4>消息日志</h4>
+  <div id="log"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+  <script>
+    var client = null;
+    function log(msg) {
+      var el = document.getElementById('log');
+      var p = document.createElement('div');
+      p.textContent = msg;
+      el.appendChild(p);
+      el.scrollTop = el.scrollHeight;
+    }
+    function connect() {
+      var url = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws-im';
+      client = Stomp.client(url);
+      client.connect({}, function() {
+        log('已连接');
+        client.subscribe('/topic/im-demo', function(frame) {
+          log('收到: ' + frame.body);
+        });
+      }, function(err) {
+        log('错误: ' + err);
+      });
+    }
+    function disconnect() {
+      if (client) {
+        client.disconnect(function() { log('已断开'); });
+        client = null;
+      }
+    }
+    function send() {
+      var msg = document.getElementById('message').value || '';
+      if (!client) { log('未连接'); return; }
+      client.send('/app/send', {}, msg);
+      log('已发送: ' + msg);
+    }
+    document.getElementById('connect').onclick = connect;
+    document.getElementById('disconnect').onclick = disconnect;
+    document.getElementById('send').onclick = send;
+  </script>
+</body>
+</html>
