@@ -1,0 +1,106 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+# Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Mac
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Log files
+*.log
+logs/
+*.log.*
+
+# Temp files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# P6Spy
+spy.log
+spy.properties
+
+# Database
+*.sql
+!mysql/smart_admin_v3.sql
+!mysql/t_project.sql
+!mysql/sql-update-log/*.sql
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# JVM
+*.hprof
+heapdump.hprof
+
+# Environment and secrets (example only - DO NOT commit actual secrets)
+# .env
+# .env.local
+# .env.*.local
+
+# Upload directories
+upload/
+uploads/
+file/
+files/
+
+# Backup files
+*.bak
+*.backup
+*~
