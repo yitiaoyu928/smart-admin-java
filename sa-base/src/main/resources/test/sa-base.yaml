@@ -52,6 +52,18 @@ spring:
               class: com.sun.mail.util.MailSSLSocketFactory
               fallback: false
         debug: false
+  rabbitmq:
+    host: 62.234.184.96
+    port: 5672
+    username: rabbitmq
+    password: rabbitmq
+    virtual-host: /
+    listener:
+      simple:
+        concurrency: 2
+        max-concurrency: 5
+        prefetch: 50
+        default-requeue-rejected: false
 
   # json序列化相关配置
   jackson:
@@ -175,6 +187,13 @@ sa-token:
 
 # SmartJob 定时任务配置(不需要可以直接删除以下配置，详细文档请看：https://www.xxxxxx.com)
 smart:
+  im:
+    enabled: true
+    exchange: smart.im.exchange
+    user-queue: smart.im.user.queue
+    admin-queue: smart.im.admin.queue
+    user-routing-key: smart.im.user
+    admin-routing-key: smart.im.admin
   job:
     enabled: true
     # 任务初始化延迟 默认30秒 可选
