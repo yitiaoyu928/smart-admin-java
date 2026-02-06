@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.lab1024.sa.base.module.support.im.dao.ImMessageDao">
+
+    <resultMap id="BaseResultMap" type="net.lab1024.sa.base.module.support.im.domain.vo.ImMessageVO">
+        <id column="u_id" property="uId"/>
+        <result column="from_id" property="fromId"/>
+        <result column="receive_id" property="receiveId"/>
+        <result column="type" property="type"/>
+        <result column="content" property="content"/>
+        <result column="read_flag" property="readFlag"/>
+        <result column="revoke_flag" property="revokeFlag"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="query" resultMap="BaseResultMap">
+        SELECT
+            u_id,
+            from_id,
+            receive_id,
+            type,
+            content,
+            read_flag,
+            revoke_flag,
+            create_time
+        FROM t_im_message
+        <where>
+            deleted_flag = 0
+            <if test="query.fromId != null and query.fromId != ''">
+                AND from_id = #{query.fromId}
+            </if>
+            <if test="query.receiveId != null and query.receiveId != ''">
+                AND receive_id = #{query.receiveId}
+            </if>
+            <if test="query.readFlag != null">
+                AND read_flag = #{query.readFlag}
+            </if>
+            <if test="query.revokeFlag != null">
+                AND revoke_flag = #{query.revokeFlag}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="queryChatMessages" resultMap="BaseResultMap">
+        SELECT
+            u_id,
+            from_id,
+            receive_id,
+            type,
+            content,
+            read_flag,
+            revoke_flag,
+            create_time
+        FROM t_im_message
+        WHERE deleted_flag = 0
+          AND (
+            (from_id = #{userId} AND receive_id = #{otherUserId})
+            OR
+            (from_id = #{otherUserId} AND receive_id = #{userId})
+          )
+          AND revoke_flag = 0
+        ORDER BY create_time DESC
+    </select>
+
+    <update id="markAsRead">
+        UPDATE t_im_message
+        SET read_flag = 1
+        WHERE deleted_flag = 0
+          AND from_id = #{otherUserId}
+          AND receive_id = #{userId}
+          AND read_flag = 0
+    </update>
+
+    <select id="getUnreadCount" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_im_message
+        WHERE deleted_flag = 0
+          AND receive_id = #{userId}
+          AND read_flag = 0
+          AND revoke_flag = 0
+    </select>
+
+</mapper>

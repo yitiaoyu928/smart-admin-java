@@ -8,6 +8,7 @@
     <file url="file://$PROJECT_DIR$/mysql/sql-update-log/v3.23.0.sql" dialect="MySQL" />
     <file url="file://$PROJECT_DIR$/mysql/sql-update-log/v3.25.0.sql" dialect="MySQL" />
     <file url="file://$PROJECT_DIR$/mysql/sql-update-log/v3.26.0.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/mysql/t_im.sql" dialect="MySQL" />
     <file url="file://$PROJECT_DIR$/mysql/t_project.sql" dialect="MySQL" />
   </component>
 </project>

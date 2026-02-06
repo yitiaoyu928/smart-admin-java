@@ -2,16 +2,22 @@
 
 ## 项目概述
 
-**SmartAdmin** 是一个基于 Java 17 和 Spring Boot 3.5.4 构建的企业级后台管理系统。项目采用模块化设计，分为 `sa-parent`（父POM）、`sa-base`（基础模块）和 `sa-admin`（应用模块）三个子项目。
+**SmartAdmin** 是一个基于 Java 17 和 Spring Boot 3.5.4 构建的企业级后台管理系统。项目采用模块化设计，分为三个子项目：
+
+- **sa-parent**（父POM）：统一管理依赖和构建配置
+- **sa-base**（基础模块）：可复用的公共组件和基础功能
+- **sa-admin**（管理后台应用）：管理端后台管理系统
+- **sa-user**（用户端应用）：用户端应用系统
 
 ## 技术栈
 
 | 分类 | 技术/版本 |
 |------|-----------|
 | 核心框架 | Java 17, Spring Boot 3.5.4 |
+| 安全框架 | Spring Security Crypto 6.5.1 |
 | ORM | MyBatis-Plus 3.5.12 |
 | 数据库 | MySQL 9.3.0, Druid 1.2.25 (连接池), P6Spy 3.9.1 (SQL监控) |
-| 缓存 | Redis + Redisson 3.50.0, Caffeine (本地缓存) |
+| 缓存 | Redis + Redisson 3.50.0 |
 | 权限认证 | Sa-Token 1.44.0 |
 | API文档 | Knife4j 4.6.0 (Swagger 3.0 + SpringDoc OpenAPI 2.8.9) |
 | 定时任务 | SmartJob |
@@ -20,7 +26,7 @@
 | HTTP客户端 | Apache HttpClient 5.5 |
 | JSON处理 | Fastjson 2.0.57 |
 | 日志框架 | Log4j2 |
-| 模板引擎 | Velocity 2.4.1, FreeMarker 2.3.34 |
+| 模板引擎 | Velocity 2.4.1, Velocity Tools 3.1, FreeMarker 2.3.34 |
 | 云存储 | AWS S3 SDK 2.31.78 |
 | IP地理定位 | ip2region 2.7.0 |
 | 加密工具 | BouncyCastle 1.80 |
@@ -38,7 +44,7 @@ smart-admin-java/
 ├── README.md                        # 项目说明文档
 ├── mysql/                           # 数据库脚本目录
 │   ├── smart_admin_v3.sql          # 初始化数据库脚本
-│   ├── t_project.sql               # 项目表脚本
+│   ├── t_project.sql               # 项目和密钥表脚本
 │   └── sql-update-log/             # 数据库更新日志
 │       ├── v3.15.0.sql
 │       ├── v3.18.0.sql
@@ -50,7 +56,7 @@ smart-admin-java/
 │   ├── pom.xml
 │   └── src/main/
 │       ├── java/net/lab1024/sa/admin/
-│       │   ├── AdminApplication.java      # 启动类
+│       │   ├── AdminApplication.java      # 管理端启动类
 │       │   ├── config/                    # MVC、拦截器、日志切面配置
 │       │   ├── constant/                  # 常量定义（缓存KEY、Swagger标签等）
 │       │   ├── interceptor/               # 拦截器
@@ -58,6 +64,8 @@ smart-admin-java/
 │       │   │   ├── business/              # 业务模块
 │       │   │   │   ├── category/          # 分类管理
 │       │   │   │   ├── goods/             # 商品管理
+│       │   │   │   ├── key/               # 密钥管理
+│       │   │   │   ├── project/           # 项目管理
 │       │   │   │   └── oa/                # OA办公模块
 │       │   │   │       ├── bank/          # 银行管理
 │       │   │   │       ├── enterprise/    # 企业管理
@@ -79,7 +87,22 @@ smart-admin-java/
 │           └── mapper/                    # MyBatis XML映射文件
 │               ├── business/              # 业务模块映射
 │               └── system/                # 系统模块映射
-└── sa-base/                           # 基础模块（可复用组件）
+├── sa-user/                         # 用户端应用模块
+│   ├── pom.xml
+│   └── src/main/
+│       ├── java/net/lab1024/sa/user/
+│       │   ├── UserApplication.java       # 用户端启动类
+│       │   ├── config/                    # 用户端配置
+│       │   ├── constant/                  # 常量定义
+│       │   ├── interceptor/               # 拦截器
+│       │   ├── module/
+│       │   │   └── key/                   # 密钥验证模块
+│       │   └── util/                      # 工具类
+│       └── resources/
+│           ├── dev/test/pre/prod/         # 多环境配置文件
+│           └── mapper/                    # MyBatis XML映射文件
+│               └── key/                   # 密钥映射
+└── sa-base/                          # 基础模块（可复用组件）
     ├── pom.xml
     └── src/main/
         ├── java/net/lab1024/sa/base/
@@ -146,28 +169,15 @@ smart-admin-java/
                 └── ts/                    # TypeScript代码模板
 ```
 
-## 构建与运行
+## 应用启动
 
-### 环境要求
+### 管理后台应用 (sa-admin)
 
-- JDK 17+
-- Maven 3.6+
-- MySQL 8.0+ (推荐 MySQL 9.3.0)
-- Redis 6.0+
-
-### Maven Profiles
-
-| Profile | 说明 | 激活方式 |
-|---------|------|----------|
-| dev | 开发环境（默认） | `-P dev` 或不指定 |
-| test | 测试环境 | `-P test` |
-| pre | 预发布环境 | `-P pre` |
-| prod | 生产环境 | `-P prod` |
-
-### 常用命令
+启动类：`net.lab1024.sa.admin.AdminApplication`
 
 ```bash
 # 开发环境运行（默认）
+cd sa-admin
 mvn spring-boot:run
 
 # 指定环境运行
@@ -180,13 +190,58 @@ mvn clean package -P dev
 mvn clean package -P dev -DskipTests
 
 # 运行打包后的应用
-java -jar sa-admin-dev-3.0.0.jar
+java -jar target/sa-admin-dev-3.0.0.jar
+```
+
+### 用户端应用 (sa-user)
+
+启动类：`net.lab1024.sa.user.UserApplication`
+
+```bash
+# 开发环境运行（默认）
+cd sa-user
+mvn spring-boot:run
+
+# 指定环境运行
+mvn spring-boot:run -P dev
+
+# 打包
+mvn clean package -P dev
+
+# 打包并跳过测试
+mvn clean package -P dev -DskipTests
+
+# 运行打包后的应用
+java -jar target/sa-user-dev-3.0.0.jar
+```
+
+## 环境要求
+
+- JDK 17+
+- Maven 3.6+
+- MySQL 8.0+ (推荐 MySQL 9.3.0)
+- Redis 6.0+
+
+## Maven Profiles
+
+| Profile | 说明 | 激活方式 |
+|---------|------|----------|
+| dev | 开发环境（默认） | `-P dev` 或不指定 |
+| test | 测试环境 | `-P test` |
+| pre | 预发布环境 | `-P pre` |
+| prod | 生产环境 | `-P prod` |
+
+### 常用命令
+
+```bash
+# 查看活跃的 Profile
+mvn help:active-profiles
 
 # 运行测试
 mvn test
 
-# 查看活跃的 Profile
-mvn help:active-profiles
+# 清理编译
+mvn clean
 ```
 
 ### 默认配置
@@ -196,7 +251,7 @@ mvn help:active-profiles
 - **项目版本**: 3.0.0
 - **数据库**: `smart` (MySQL)
 - **Redis**: 数据库 1
-- **日志目录**: `${localPath:/home}/logs/smart_admin_v3/sa-admin/${profiles.active}`
+- **日志目录**: `${localPath:/home}/logs/smart_admin_v3/sa-{app-name}/${profiles.active}`
 - **Tomcat 访问日志**: 保留 7 天
 
 ## 开发规范
@@ -214,6 +269,7 @@ net.lab1024.sa.模块名.功能
   ├── domain/form     # 表单对象
   ├── domain/query    # 查询对象
   ├── domain/vo       # 视图对象
+  ├── manager         # 业务管理器
   └── constant        # 常量定义
 ```
 
@@ -255,7 +311,7 @@ net.lab1024.sa.模块名.功能
 
 ### 配置文件优先级
 
-1. `sa-admin/src/main/resources/{profile}/application.yaml` (应用配置)
+1. `{app-name}/src/main/resources/{profile}/application.yaml` (应用配置)
 2. `sa-base/src/main/resources/{profile}/sa-base.yaml` (基础配置)
 3. JVM 系统参数 `-Dkey=value`
 4. 环境变量
@@ -438,7 +494,7 @@ mvn test -DskipTests=false
 
 ## 功能模块
 
-### 系统模块
+### 系统模块 (sa-admin)
 
 - **部门管理**: 组织架构管理
 - **员工管理**: 员工信息维护
@@ -449,17 +505,23 @@ mvn test -DskipTests=false
 - **登录认证**: 用户登录和认证
 - **消息管理**: 系统消息推送
 
-### 业务模块
+### 业务模块 (sa-admin)
 
 - **分类管理**: 业务分类管理
 - **商品管理**: 商品信息管理
+- **项目管理**: 项目信息维护，支持项目类型（APP、WEB、Windows）
+- **密钥管理**: 密钥生成、分配和使用管理，支持多种周期类型（天卡、月卡、季卡、年卡）
 - **OA模块**:
   - 银行管理
   - 企业管理
   - 发票管理
   - 通知管理
 
-### 支持模块
+### 用户端模块 (sa-user)
+
+- **密钥验证**: 密钥的验证和使用功能
+
+### 支持模块 (sa-base)
 
 - **代码生成器**: 自动生成代码
 - **数据字典**: 字典数据管理
