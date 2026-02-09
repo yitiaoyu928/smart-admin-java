@@ -1,9 +1,15 @@
 package net.lab1024.sa.user.interceptor;
 
+import cn.dev33.satoken.annotation.SaIgnore;
+import cn.dev33.satoken.exception.SaTokenException;
+import cn.dev33.satoken.stp.StpUtil;
+import cn.dev33.satoken.strategy.SaAnnotationStrategy;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import net.lab1024.sa.user.module.login.domain.RequestUserEntity;
+import net.lab1024.sa.user.module.login.service.LoginService;
 import net.lab1024.sa.base.common.annoation.NoNeedLogin;
 import net.lab1024.sa.base.common.code.SystemErrorCode;
 import net.lab1024.sa.base.common.code.UserErrorCode;
@@ -31,6 +37,9 @@ import java.lang.reflect.Method;
 @Slf4j
 public class UserInterceptor implements HandlerInterceptor {
 
+    @Resource
+    private LoginService loginService;
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
@@ -46,26 +55,59 @@ public class UserInterceptor implements HandlerInterceptor {
         }
 
         try {
-            // --------------- 第一步： 校验 登录 ---------------
+            // --------------- 第一步： 根据token 获取用户 ---------------
+
+            String tokenValue = StpUtil.getTokenValue();
+            String loginId = (String) StpUtil.getLoginIdByToken(tokenValue);
+            RequestUserEntity requestUserEntity = loginService.getLoginUser(loginId, request);
+
+            // --------------- 第二步： 校验 登录 ---------------
 
             Method method = ((HandlerMethod) handler).getMethod();
             NoNeedLogin noNeedLogin = ((HandlerMethod) handler).getMethodAnnotation(NoNeedLogin.class);
             if (noNeedLogin != null) {
+                SmartRequestUtil.setRequestUser((net.lab1024.sa.base.common.domain.RequestUser) requestUserEntity);
                 return true;
             }
 
-            // TODO: 根据实际业务需求实现用户端登录校验逻辑
-            // 获取用户信息并设置到请求上下文中
-            // SmartRequestUtil.setRequestUser(requestUser);
+            if (requestUserEntity == null) {
+                SmartResponseUtil.write(response, ResponseDTO.error(UserErrorCode.LOGIN_STATE_INVALID));
+                return false;
+            }
 
-            // 暂时返回 true，待实现具体业务逻辑
-            return true;
+            // 用户端不需要更新活跃时间，不会自动下线
+            SmartRequestUtil.setRequestUser((net.lab1024.sa.base.common.domain.RequestUser) requestUserEntity);
 
+            // --------------- 第三步： 校验 权限 ---------------
+
+            if (SaAnnotationStrategy.instance.isAnnotationPresent.apply(method, SaIgnore.class)) {
+                return true;
+            }
+
+            SaAnnotationStrategy.instance.checkMethodAnnotation.accept(method);
+
+        } catch (SaTokenException e) {
+            /*
+             * sa-token 异常状态码
+             * 具体请看： https://sa-token.cc/doc.html#/fun/exception-code
+             */
+            int code = e.getCode();
+            if (code == 11041 || code == 11051) {
+                SmartResponseUtil.write(response, ResponseDTO.error(UserErrorCode.NO_PERMISSION));
+            } else if (code >= 11011 && code <= 11015) {
+                SmartResponseUtil.write(response, ResponseDTO.error(UserErrorCode.LOGIN_STATE_INVALID));
+            } else {
+                SmartResponseUtil.write(response, ResponseDTO.error(UserErrorCode.PARAM_ERROR));
+            }
+            return false;
         } catch (Throwable e) {
             SmartResponseUtil.write(response, ResponseDTO.error(SystemErrorCode.SYSTEM_ERROR));
             log.error(e.getMessage(), e);
             return false;
         }
+
+        // 通过验证
+        return true;
     }
 
     @Override
