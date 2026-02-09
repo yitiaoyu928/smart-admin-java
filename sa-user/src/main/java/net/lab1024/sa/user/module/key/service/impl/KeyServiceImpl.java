@@ -12,7 +12,6 @@ import net.lab1024.sa.user.module.key.domain.vo.KeyVO;
 import net.lab1024.sa.user.module.key.service.KeyService;
 import net.lab1024.sa.base.common.domain.ResponseDTO;
 import net.lab1024.sa.base.common.util.SmartBeanUtil;
-import net.lab1024.sa.base.common.util.SmartRequestUtil;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -142,12 +141,12 @@ public class KeyServiceImpl implements KeyService {
             return ResponseDTO.userErrorParam("密钥不存在");
         }
 
-        if (keyEntity.getDisabledFlag()) {
+        if (Boolean.TRUE.equals(keyEntity.getDisabledFlag())) {
             log.warn("密钥激活失败，密钥已被禁用: {}", keyStr);
             return ResponseDTO.userErrorParam("密钥已被禁用");
         }
 
-        if (keyEntity.getUsingFlag()) {
+        if (Boolean.TRUE.equals(keyEntity.getUsingFlag())) {
             log.warn("密钥激活失败，密钥已被使用: {}", keyStr);
             return ResponseDTO.userErrorParam("密钥已被使用");
         }
@@ -162,6 +161,10 @@ public class KeyServiceImpl implements KeyService {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expireTime;
         String cycleType = keyEntity.getCycleType();
+        if (cycleType == null) {
+            log.warn("密钥激活失败，密钥周期类型为空: {}", keyStr);
+            return ResponseDTO.userErrorParam("密钥周期类型无效");
+        }
 
         switch (cycleType.toUpperCase()) {
             case "DAY":
