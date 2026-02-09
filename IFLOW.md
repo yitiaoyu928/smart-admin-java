@@ -75,6 +75,7 @@ smart-admin-java/
 │       │   │       ├── datascope/         # 数据权限
 │       │   │       ├── department/        # 部门管理
 │       │   │       ├── employee/          # 员工管理
+│       │   │       ├── im/                # 即时通讯（IM）控制器
 │       │   │       ├── login/             # 登录认证
 │       │   │       ├── menu/              # 菜单管理
 │       │   │       ├── message/           # 消息管理
@@ -148,6 +149,7 @@ smart-admin-java/
         │           ├── file/              # 文件管理
         │           ├── heartbeat/         # 心跳检测
         │           ├── helpdoc/           # 帮助文档
+        │           ├── im/                # 即时通讯（IM）
         │           ├── job/               # 定时任务
         │           ├── loginlog/          # 登录日志
         │           ├── mail/              # 邮件服务
@@ -158,8 +160,7 @@ smart-admin-java/
         │           ├── repeatsubmit/      # 防重复提交
         │           ├── securityprotect/   # 安全防护
         │           ├── serialnumber/      # 序列号生成
-        │           └── table/             # 表字段管理
-        └── resources/
+        │           └── table/             # 表字段管理        └── resources/
             ├── dev/test/pre/prod/         # 多环境配置文件 (sa-base.yaml)
             ├── mapper/                    # MyBatis Mapper XML
             ├── ip2region.xdb             # IP地址库
@@ -300,6 +301,13 @@ net.lab1024.sa.模块名.功能
 - **认证**: 支持 Bearer Token 认证
 - **配置**: 可通过 `knife4j.basic` 配置 Basic 认证
 
+### WebSocket 即时通讯
+
+- **演示页面**: `http://localhost:1024/im-demo.html`
+- **WebSocket 端点**: `ws://localhost:1024/ws/im`
+- **支持协议**: STOMP over WebSocket (SockJS)
+- **功能**: 点对点消息、消息撤回、已读标记
+
 ### 数据库规范
 
 - 使用 MyBatis-Plus 自动填充功能处理公共字段
@@ -438,6 +446,20 @@ smart:
     db-refresh-interval: 60      # 配置检测间隔（秒）
 ```
 
+### WebSocket/IM 即时通讯配置
+
+项目集成了 WebSocket 支持即时通讯功能，使用 STOMP 协议：
+
+- **WebSocket 端点**: `/ws/im`
+- **消息代理**: `/topic` (广播), `/queue` (点对点)
+- **应用前缀**: `/app`
+- **发送消息**: `/app/chat/send`
+- **撤回消息**: `/app/chat/revoke`
+- **个人订阅**: `/queue/chat/{userId}`
+- **公共订阅**: `/topic/chat`
+
+**前端演示页面**: 访问 `http://localhost:1024/im-demo.html`
+
 ## 数据库管理
 
 ### 初始化数据库
@@ -462,6 +484,18 @@ mysql -u root -p smart < mysql/sql-update-log/v3.18.0.sql
 ### 当前版本
 
 最新数据库更新版本：v3.26.0
+
+### 数据表说明
+
+- **t_im_message**: IM 消息表（即时通讯）
+  - `u_id`: 消息ID（主键）
+  - `from_id`: 发送者ID
+  - `receive_id`: 接收者ID
+  - `type`: 消息类型（1-文本消息等）
+  - `content`: 消息内容
+  - `read_flag`: 是否已读
+  - `revoke_flag`: 是否撤回
+  - `deleted_flag`: 是否删除
 
 ## 测试
 
@@ -492,6 +526,69 @@ mvn test -DskipTests=false
 | `Ip2RegionUtil` | IP地理定位 |
 | `SmartLogUtil` | 智能日志 |
 
+## 即时通讯（IM）模块
+
+### 功能特性
+
+- **实时通讯**: 基于 WebSocket + STOMP 协议的实时消息推送
+- **点对点消息**: 支持用户之间的私聊功能
+- **消息撤回**: 支持撤回已发送的消息
+- **已读标记**: 支持标记消息为已读状态
+- **未读统计**: 获取用户未读消息数量
+- **消息历史**: 支持查询对话历史记录
+
+### 技术实现
+
+- **WebSocket 配置**: `ImWebSocketConfig` (sa-base)
+- **消息控制器**: `ImWebSocketController` (sa-admin)
+- **消息服务**: `ImMessageService` (sa-base)
+- **数据访问**: `ImMessageDao` (sa-base)
+- **数据表**: `t_im_message`
+
+### 消息类型
+
+| 类型值 | 说明 |
+|--------|------|
+| 1 | 文本消息 |
+| 其他 | 预留扩展（图片、文件等） |
+
+### WebSocket 端点
+
+| 端点 | 用途 |
+|------|------|
+| `/ws/im` | WebSocket 连接端点 |
+| `/app/chat/send` | 发送消息 |
+| `/app/chat/revoke` | 撤回消息 |
+| `/queue/chat/{userId}` | 个人消息队列（订阅） |
+| `/topic/chat` | 公共聊天室（广播） |
+
+### 前端集成示例
+
+```javascript
+// 连接 WebSocket
+const socket = new SockJS('http://localhost:1024/ws/im');
+const stompClient = Stomp.over(socket);
+
+stompClient.connect({}, function (frame) {
+    // 订阅个人消息
+    stompClient.subscribe('/queue/chat/' + userId, function (message) {
+        handleMessage(JSON.parse(message.body));
+    });
+});
+
+// 发送消息
+stompClient.send('/app/chat/send', {}, JSON.stringify({
+    receiveId: 'user2',
+    type: 1,
+    content: 'Hello'
+}));
+
+// 撤回消息
+stompClient.send('/app/chat/revoke', {}, JSON.stringify({
+    uId: 'message-id'
+}));
+```
+
 ## 功能模块
 
 ### 系统模块 (sa-admin)
@@ -504,6 +601,7 @@ mvn test -DskipTests=false
 - **数据权限**: 数据访问范围控制
 - **登录认证**: 用户登录和认证
 - **消息管理**: 系统消息推送
+- **即时通讯 (IM)**: WebSocket 实时通讯控制器，处理消息发送和撤回
 
 ### 业务模块 (sa-admin)
 
@@ -523,6 +621,7 @@ mvn test -DskipTests=false
 
 ### 支持模块 (sa-base)
 
+- **即时通讯 (IM)**: 基于 WebSocket 的即时通讯功能，支持点对点消息发送、消息撤回、已读标记等
 - **代码生成器**: 自动生成代码
 - **数据字典**: 字典数据管理
 - **文件管理**: 文件上传下载

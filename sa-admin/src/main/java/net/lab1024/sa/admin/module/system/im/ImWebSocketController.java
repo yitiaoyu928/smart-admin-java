@@ -1,13 +1,11 @@
 package net.lab1024.sa.admin.module.system.im;
 
-import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.fastjson.JSON;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import net.lab1024.sa.base.common.code.ErrorCode;
+import net.lab1024.sa.base.common.code.SystemErrorCode;
 import net.lab1024.sa.base.common.domain.ResponseDTO;
-import net.lab1024.sa.base.common.util.SmartRequestUtil;
 import net.lab1024.sa.base.module.support.im.domain.form.ImMessageSendForm;
 import net.lab1024.sa.base.module.support.im.domain.vo.ImMessageVO;
 import net.lab1024.sa.base.module.support.im.service.ImMessageService;
@@ -15,10 +13,6 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 /**
  * IM WebSocket控制器
@@ -28,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @Controller
-@Tag(name = "IM消息-WebSocket")
 public class ImWebSocketController {
 
     @Resource
@@ -62,7 +55,7 @@ public class ImWebSocketController {
             // 保存消息到数据库
             ResponseDTO<ImMessageVO> response = imMessageService.send(fromId, sendForm);
             if (!response.getOk()) {
-                return JSON.toJSONString(ResponseDTO.error(response.getCode(), response.getMsg()));
+                return JSON.toJSONString(ResponseDTO.error(SystemErrorCode.SYSTEM_ERROR));
             }
 
             ImMessageVO messageVO = response.getData();
@@ -76,7 +69,7 @@ public class ImWebSocketController {
 
         } catch (Exception e) {
             log.error("发送IM消息失败", e);
-            return JSON.toJSONString(ResponseDTO.error("发送失败: " + e.getMessage()));
+            return JSON.toJSONString(ResponseDTO.userErrorParam("发送失败: " + e.getMessage()));
         }
     }
 
@@ -107,7 +100,7 @@ public class ImWebSocketController {
 
         } catch (Exception e) {
             log.error("撤回IM消息失败", e);
-            return JSON.toJSONString(ResponseDTO.error("撤回失败: " + e.getMessage()));
+            return JSON.toJSONString(ResponseDTO.userErrorParam("撤回失败: " + e.getMessage()));
         }
     }
 }

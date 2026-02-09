@@ -25,7 +25,7 @@
             create_time
         FROM t_im_message
         <where>
-            deleted_flag = 0
+            deleted_flag = false
             <if test="query.fromId != null and query.fromId != ''">
                 AND from_id = #{query.fromId}
             </if>
@@ -53,32 +53,32 @@
             revoke_flag,
             create_time
         FROM t_im_message
-        WHERE deleted_flag = 0
+        WHERE deleted_flag = false
           AND (
             (from_id = #{userId} AND receive_id = #{otherUserId})
             OR
             (from_id = #{otherUserId} AND receive_id = #{userId})
           )
-          AND revoke_flag = 0
+          AND revoke_flag = false
         ORDER BY create_time DESC
     </select>
 
     <update id="markAsRead">
         UPDATE t_im_message
-        SET read_flag = 1
-        WHERE deleted_flag = 0
+        SET read_flag = true
+        WHERE deleted_flag = false
           AND from_id = #{otherUserId}
           AND receive_id = #{userId}
-          AND read_flag = 0
+          AND read_flag = false
     </update>
 
     <select id="getUnreadCount" resultType="java.lang.Long">
         SELECT COUNT(*)
         FROM t_im_message
-        WHERE deleted_flag = 0
+        WHERE deleted_flag = false
           AND receive_id = #{userId}
-          AND read_flag = 0
-          AND revoke_flag = 0
+          AND read_flag = false
+          AND revoke_flag = false
     </select>
 
 </mapper>

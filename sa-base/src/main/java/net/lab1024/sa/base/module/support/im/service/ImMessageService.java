@@ -8,7 +8,6 @@ import net.lab1024.sa.base.common.util.SmartPageUtil;
 import net.lab1024.sa.base.module.support.im.dao.ImMessageDao;
 import net.lab1024.sa.base.module.support.im.domain.entity.ImMessageEntity;
 import net.lab1024.sa.base.module.support.im.domain.form.ImMessageQueryForm;
-import net.lab1024.sa.base.module.support.im.domain.form.ImMessageRevokeForm;
 import net.lab1024.sa.base.module.support.im.domain.form.ImMessageSendForm;
 import net.lab1024.sa.base.module.support.im.domain.vo.ImMessageVO;
 import jakarta.annotation.Resource;
@@ -17,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -43,9 +43,9 @@ public class ImMessageService {
         entity.setReceiveId(sendForm.getReceiveId());
         entity.setType(sendForm.getType());
         entity.setContent(sendForm.getContent());
-        entity.setDeletedFlag(0);
-        entity.setReadFlag(0);
-        entity.setRevokeFlag(0);
+        entity.setDeletedFlag(false);
+        entity.setReadFlag(false);
+        entity.setRevokeFlag(false);
         entity.setCreateTime(LocalDateTime.now());
         entity.setUpdateTime(LocalDateTime.now());
 
@@ -72,11 +72,11 @@ public class ImMessageService {
             return ResponseDTO.userErrorParam("只能撤回自己发送的消息");
         }
 
-        if (entity.getRevokeFlag() == 1) {
+        if (Boolean.TRUE.equals(entity.getRevokeFlag())) {
             return ResponseDTO.userErrorParam("消息已撤回");
         }
 
-        entity.setRevokeFlag(1);
+        entity.setRevokeFlag(true);
         entity.setUpdateTime(LocalDateTime.now());
         imMessageDao.updateById(entity);
 
@@ -97,7 +97,7 @@ public class ImMessageService {
             return ResponseDTO.userErrorParam("只能删除自己发送或接收的消息");
         }
 
-        entity.setDeletedFlag(1);
+        entity.setDeletedFlag(true);
         entity.setUpdateTime(LocalDateTime.now());
         imMessageDao.updateById(entity);
 

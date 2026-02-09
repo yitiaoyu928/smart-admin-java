@@ -45,17 +45,17 @@ public class ImMessageEntity {
     /**
      * 是否删除
      */
-    private Integer deletedFlag;
+    private Boolean deletedFlag;
 
     /**
      * 是否已读
      */
-    private Integer readFlag;
+    private Boolean readFlag;
 
     /**
      * 是否撤回
      */
-    private Integer revokeFlag;
+    private Boolean revokeFlag;
 
     /**
      * 更新时间
