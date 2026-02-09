@@ -1,6 +1,6 @@
 package net.lab1024.sa.base.common.swagger;
 
-import net.lab1024.sa.base.module.support.im.constant.ImMessageTypeEnum;
+import net.lab1024.sa.base.common.enumeration.BaseEnum;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -24,7 +24,7 @@ public @interface SchemaEnum {
      * 枚举类对象
      *
      */
-    Class<ImMessageTypeEnum> value();
+    Class<? extends BaseEnum> value();
 
     String example() default "";
 

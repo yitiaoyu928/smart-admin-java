@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.lab1024.sa.base.module.support.im.dao.ImGroupNoticeDao">
+
+    <resultMap id="BaseResultMap" type="net.lab1024.sa.base.module.support.im.domain.vo.ImGroupNoticeVO">
+        <id column="id" property="id"/>
+        <result column="group_id" property="groupId"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="create_by" property="createBy"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="query" resultMap="BaseResultMap">
+        SELECT
+            id,
+            group_id,
+            title,
+            content,
+            create_by,
+            create_time,
+            update_time
+        FROM t_im_group_notice
+        <where>
+            deleted_flag = false
+            <if test="query.groupId != null">
+                AND group_id = #{query.groupId}
+            </if>
+            <if test="query.title != null and query.title != ''">
+                AND title LIKE CONCAT('%', #{query.title}, '%')
+            </if>
+            <if test="query.createBy != null and query.createBy != ''">
+                AND create_by = #{query.createBy}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="getLatestNotice" resultMap="BaseResultMap">
+        SELECT
+            id,
+            group_id,
+            title,
+            content,
+            create_by,
+            create_time,
+            update_time
+        FROM t_im_group_notice
+        WHERE deleted_flag = false
+          AND group_id = #{groupId}
+        ORDER BY create_time DESC
+        LIMIT 1
+    </select>
+
+</mapper>

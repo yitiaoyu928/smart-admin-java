@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.lab1024.sa.base.module.support.im.dao.ImGroupDao">
+
+    <resultMap id="BaseResultMap" type="net.lab1024.sa.base.module.support.im.domain.vo.ImGroupVO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="avatar" property="avatar"/>
+        <result column="member_count" property="memberCount"/>
+        <result column="owner_id" property="ownerId"/>
+        <result column="type" property="type"/>
+        <result column="duration" property="duration"/>
+        <result column="status_flag" property="statusFlag"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="query" resultMap="BaseResultMap">
+        SELECT
+            id,
+            name,
+            avatar,
+            member_count,
+            owner_id,
+            type,
+            duration,
+            status_flag,
+            create_time,
+            update_time
+        FROM t_im_group
+        <where>
+            deleted_flag = false
+            <if test="query.name != null and query.name != ''">
+                AND name LIKE CONCAT('%', #{query.name}, '%')
+            </if>
+            <if test="query.ownerId != null and query.ownerId != ''">
+                AND owner_id = #{query.ownerId}
+            </if>
+            <if test="query.type != null">
+                AND type = #{query.type}
+            </if>
+            <if test="query.statusFlag != null">
+                AND status_flag = #{query.statusFlag}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="queryUserGroups" resultMap="BaseResultMap">
+        SELECT
+            g.id,
+            g.name,
+            g.avatar,
+            g.member_count,
+            g.owner_id,
+            g.type,
+            g.duration,
+            g.status_flag,
+            g.create_time,
+            g.update_time
+        FROM t_im_group g
+        INNER JOIN t_im_group_user gu ON g.id = gu.group_id
+        WHERE g.deleted_flag = false
+          AND gu.deleted_flag = false
+          AND gu.user_id = #{userId}
+          AND g.status_flag = 0
+        ORDER BY g.create_time DESC
+    </select>
+
+</mapper>

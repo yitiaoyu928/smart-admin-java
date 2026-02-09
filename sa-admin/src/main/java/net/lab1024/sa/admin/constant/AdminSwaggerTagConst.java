@@ -59,6 +59,12 @@ public class AdminSwaggerTagConst extends SwaggerTagConst {
 
         public static final String IM_MESSAGE = "IM消息";
 
+        public static final String IM_GROUP = "IM群组";
+
+        public static final String IM_GROUP_NOTICE = "IM群组公告";
+
+        public static final String IM_GROUP_USER = "IM群组成员";
+
     }
 
 
