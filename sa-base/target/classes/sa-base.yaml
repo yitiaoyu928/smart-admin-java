@@ -38,13 +38,12 @@ spring:
           min-idle: 1
           max-idle: 3
           max-wait: 30000ms
-
   # 邮件，置以SSL的方式发送, 这个需要使用这种方式并且端口是465
   mail:
     host: smtp.163.com
     port: 465
-    username: lab1024@163.com
-    password: LAB1024LAB
+    username: shijieshuo928@163.com
+    password: PDPstYz8GmkTHQ3n
     test-connection: false
     properties:
       mail:

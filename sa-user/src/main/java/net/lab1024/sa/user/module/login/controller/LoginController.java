@@ -51,8 +51,8 @@ public class LoginController {
     @NoNeedLogin
     @RepeatSubmit
     @Operation(summary = "发送邮箱验证码")
-    @PostMapping("/send-code")
-    public ResponseDTO<String> sendCode(@RequestParam String email) {
+    @GetMapping("/send-code/{email}")
+    public ResponseDTO<String> sendCode(@PathVariable("email") String email) {
         return verificationCodeService.sendEmailCode(email);
     }
 
