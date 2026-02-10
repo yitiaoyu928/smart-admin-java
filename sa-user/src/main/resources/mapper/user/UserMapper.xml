@@ -2,21 +2,26 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="net.lab1024.sa.user.module.user.dao.UserMapper">
 
-    <select id="selectByEmail" resultType="net.lab1024.sa.user.module.user.domain.entity.UserEntity">
+    <resultMap id="UserEntityMap" type="net.lab1024.sa.user.module.user.domain.entity.UserEntity">
+        <id column="employee_id" property="userId"/>
+        <result column="actual_name" property="nickname"/>
+    </resultMap>
+
+    <select id="selectByEmail" resultMap="UserEntityMap">
         SELECT * FROM t_employee WHERE email = #{email} AND deleted_flag = 0
     </select>
 
-    <select id="selectByLoginName" resultType="net.lab1024.sa.user.module.user.domain.entity.UserEntity">
+    <select id="selectByLoginName" resultMap="UserEntityMap">
         SELECT * FROM t_employee
         WHERE (login_name = #{loginName} OR email = #{loginName} OR phone = #{loginName})
           AND deleted_flag = 0
     </select>
 
-    <select id="selectByPhone" resultType="net.lab1024.sa.user.module.user.domain.entity.UserEntity">
+    <select id="selectByPhone" resultMap="UserEntityMap">
         SELECT * FROM t_employee WHERE phone = #{phone} AND deleted_flag = 0
     </select>
     
-    <select id="selectByNickname" resultType="net.lab1024.sa.user.module.user.domain.entity.UserEntity">
+    <select id="selectByNickname" resultMap="UserEntityMap">
         SELECT * FROM t_employee WHERE actual_name = #{nickname} AND deleted_flag = 0
     </select>
 

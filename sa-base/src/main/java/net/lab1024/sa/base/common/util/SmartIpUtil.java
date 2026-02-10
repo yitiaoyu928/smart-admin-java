@@ -2,6 +2,7 @@ package net.lab1024.sa.base.common.util;
 
 import lombok.extern.slf4j.Slf4j;
 import net.lab1024.sa.base.common.constant.StringConst;
+import net.lab1024.sa.base.common.util.SmartStringUtil;
 import org.lionsoul.ip2region.xdb.Searcher;
 
 import java.net.InetAddress;
@@ -57,11 +58,24 @@ public class SmartIpUtil {
                 return regionList;
             }
             ipStr = ipStr.trim();
+            
+            // 处理IPv6回环地址
+            if ("0:0:0:0:0:0:0:1".equals(ipStr) || "::1".equals(ipStr)) {
+                ipStr = "127.0.0.1";
+            }
+            
+            // 处理其他IPv6地址格式
+            if (ipStr.contains(":") && !ipStr.equals("127.0.0.1")) {
+                // 对于其他IPv6地址，返回默认值
+                regionList.addAll(Arrays.asList("0", "0", "0", "内网IP", "内网IP"));
+                return regionList;
+            }
+            
             String region = IP_SEARCHER.search(ipStr);
             String[] split = region.split("\\|");
             regionList.addAll(Arrays.asList(split));
         } catch (Exception e) {
-            log.error("解析ip地址出错", e);
+            log.error("解析ip地址出错, ip: {}", ipStr, e);
         }
         return regionList;
     }
@@ -78,9 +92,21 @@ public class SmartIpUtil {
                 return StringConst.EMPTY;
             }
             ipStr = ipStr.trim();
+            
+            // 处理IPv6回环地址
+            if ("0:0:0:0:0:0:0:1".equals(ipStr) || "::1".equals(ipStr)) {
+                ipStr = "127.0.0.1";
+            }
+            
+            // 处理其他IPv6地址格式
+            if (ipStr.contains(":") && !ipStr.equals("127.0.0.1")) {
+                // 对于其他IPv6地址，暂时返回默认值
+                return "0|0|0|内网IP|内网IP";
+            }
+            
             return IP_SEARCHER.search(ipStr);
         } catch (Exception e) {
-            log.error("解析ip地址出错", e);
+            log.error("解析ip地址出错, ip: {}", ipStr, e);
             return StringConst.EMPTY;
         }
     }

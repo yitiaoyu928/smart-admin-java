@@ -4,10 +4,12 @@ import cn.dev33.satoken.annotation.SaIgnore;
 import cn.dev33.satoken.exception.SaTokenException;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.strategy.SaAnnotationStrategy;
+import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import net.lab1024.sa.base.common.domain.RequestUser;
 import net.lab1024.sa.user.module.login.domain.RequestUserEntity;
 import net.lab1024.sa.user.module.login.service.LoginService;
 import net.lab1024.sa.base.common.annoation.NoNeedLogin;
@@ -58,6 +60,12 @@ public class UserInterceptor implements HandlerInterceptor {
             // --------------- 第一步： 根据token 获取用户 ---------------
 
             String tokenValue = StpUtil.getTokenValue();
+            // 检查token是否存在且有效
+            if (StrUtil.isBlank(tokenValue) || !StpUtil.isLogin()) {
+                SmartRequestUtil.setRequestUser(null);
+                return true;
+            }
+            
             String loginId = (String) StpUtil.getLoginIdByToken(tokenValue);
             RequestUserEntity requestUserEntity = loginService.getLoginUser(loginId, request);
 
@@ -66,7 +74,7 @@ public class UserInterceptor implements HandlerInterceptor {
             Method method = ((HandlerMethod) handler).getMethod();
             NoNeedLogin noNeedLogin = ((HandlerMethod) handler).getMethodAnnotation(NoNeedLogin.class);
             if (noNeedLogin != null) {
-                SmartRequestUtil.setRequestUser((net.lab1024.sa.base.common.domain.RequestUser) requestUserEntity);
+                SmartRequestUtil.setRequestUser((RequestUser) requestUserEntity);
                 return true;
             }
 
@@ -76,7 +84,7 @@ public class UserInterceptor implements HandlerInterceptor {
             }
 
             // 用户端不需要更新活跃时间，不会自动下线
-            SmartRequestUtil.setRequestUser((net.lab1024.sa.base.common.domain.RequestUser) requestUserEntity);
+            SmartRequestUtil.setRequestUser((RequestUser) requestUserEntity);
 
             // --------------- 第三步： 校验 权限 ---------------
 

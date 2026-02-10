@@ -56,10 +56,19 @@ public class LoginService {
      * 获取登录用户
      */
     public RequestUserEntity getLoginUser(String loginId, HttpServletRequest request) {
-        if (StrUtil.isBlank(loginId)) {
+        // 检查loginId是否为空或"null"字符串
+        if (StrUtil.isBlank(loginId) || "null".equals(loginId)) {
             return null;
         }
-        Long userId = Long.parseLong(loginId);
+        
+        Long userId;
+        try {
+            userId = Long.parseLong(loginId);
+        } catch (NumberFormatException e) {
+            // 如果转换失败，说明loginId不是有效的数字格式
+            return null;
+        }
+        
         UserEntity user = userMapper.selectById(userId);
         if (user == null || Boolean.TRUE.equals(user.getDeletedFlag())) {
             return null;
@@ -158,9 +167,9 @@ public class LoginService {
 
         // 2. 查询用户
         UserEntity user = userMapper.selectByLoginName(form.getLoginName());
-
+        System.out.println(user);
         if (user == null || Boolean.TRUE.equals(user.getDeletedFlag())) {
-            logLogin(null, form.getLoginName(), LoginLogResultEnum.LOGIN_FAIL, "账号不存在");
+            logLogin(0L, form.getLoginName(), LoginLogResultEnum.LOGIN_FAIL, "账号不存在");
             return ResponseDTO.userErrorParam("账号或密码错误");
         }
 
