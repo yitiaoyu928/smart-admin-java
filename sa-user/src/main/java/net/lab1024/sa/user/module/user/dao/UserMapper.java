@@ -6,8 +6,6 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 /**
  * 用户 Mapper
  */
@@ -20,6 +18,8 @@ public interface UserMapper extends BaseMapper<UserEntity> {
      */
     UserEntity selectByEmail(@Param("email") String email);
 
+    UserEntity selectByLoginName(@Param("loginName") String loginName);
+
     /**
      * 根据手机号查询用户
      */
@@ -29,9 +29,4 @@ public interface UserMapper extends BaseMapper<UserEntity> {
      * 根据昵称查询用户
      */
     UserEntity selectByNickname(@Param("nickname") String nickname);
-    
-    /**
-     * 更新积分
-     */
-    void updatePoints(@Param("userId") Long userId, @Param("points") Integer points);
 }

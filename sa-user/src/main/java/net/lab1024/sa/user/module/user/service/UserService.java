@@ -31,10 +31,13 @@ public class UserService {
     public ResponseDTO<UserVO> getUserInfo() {
         Long userId = StpUtil.getLoginIdAsLong();
         UserEntity userEntity = userMapper.selectById(userId);
-        if (userEntity == null) {
+        if (userEntity == null || Boolean.TRUE.equals(userEntity.getDeletedFlag())) {
             return ResponseDTO.userErrorParam("用户不存在");
         }
         UserVO userVO = BeanUtil.copyProperties(userEntity, UserVO.class);
+        userVO.setStatus(Boolean.TRUE.equals(userEntity.getDisabledFlag()) ? 0 : 1);
+        userVO.setLevel(1);
+        userVO.setPoints(0);
         return ResponseDTO.ok(userVO);
     }
 
@@ -45,7 +48,7 @@ public class UserService {
     public ResponseDTO<String> updateUserInfo(UserUpdateForm form) {
         Long userId = StpUtil.getLoginIdAsLong();
         UserEntity userEntity = userMapper.selectById(userId);
-        if (userEntity == null) {
+        if (userEntity == null || Boolean.TRUE.equals(userEntity.getDeletedFlag())) {
             return ResponseDTO.userErrorParam("用户不存在");
         }
 
@@ -55,7 +58,15 @@ public class UserService {
             }
         }
 
-        BeanUtil.copyProperties(form, userEntity, "userId");
+        if (StrUtil.isNotBlank(form.getNickname())) {
+            userEntity.setNickname(form.getNickname());
+        }
+        if (StrUtil.isNotBlank(form.getAvatar())) {
+            userEntity.setAvatar(form.getAvatar());
+        }
+        if (form.getGender() != null) {
+            userEntity.setGender(form.getGender());
+        }
         userMapper.updateById(userEntity);
         return ResponseDTO.okMsg("更新成功");
     }
@@ -67,7 +78,7 @@ public class UserService {
     public ResponseDTO<String> updatePassword(UserPasswordUpdateForm form) {
         Long userId = StpUtil.getLoginIdAsLong();
         UserEntity userEntity = userMapper.selectById(userId);
-        if (userEntity == null) {
+        if (userEntity == null || Boolean.TRUE.equals(userEntity.getDeletedFlag())) {
             return ResponseDTO.userErrorParam("用户不存在");
         }
 

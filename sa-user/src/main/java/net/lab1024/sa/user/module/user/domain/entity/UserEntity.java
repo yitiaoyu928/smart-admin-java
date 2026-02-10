@@ -1,92 +1,53 @@
 package net.lab1024.sa.user.module.user.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import net.lab1024.sa.base.common.enumeration.GenderEnum;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
  * 用户实体类
  */
 @Data
-@TableName("t_user")
+@TableName("t_employee")
 public class UserEntity {
 
-    @TableId(type = IdType.AUTO)
+    @TableId(value = "employee_id", type = IdType.AUTO)
     private Long userId;
 
-    /**
-     * 昵称
-     */
-    private String nickname;
+    private String employeeUid;
 
-    /**
-     * 头像
-     */
-    private String avatar;
+    private String loginName;
 
-    /**
-     * 性别
-     * @see GenderEnum
-     */
-    private Integer gender;
-
-    /**
-     * 生日
-     */
-    private LocalDate birthday;
-
-    /**
-     * 邮箱
-     */
-    private String email;
-
-    /**
-     * 手机号
-     */
-    private String phone;
-
-    /**
-     * 登录密码
-     */
     private String loginPwd;
 
-    /**
-     * 状态 0禁用 1启用
-     */
-    private Integer status;
+    @TableField("actual_name")
+    private String nickname;
 
-    /**
-     * 等级
-     */
-    private Integer level;
+    private String avatar;
 
-    /**
-     * 积分
-     */
-    private Integer points;
+    private Integer gender;
 
-    /**
-     * 创建时间
-     */
-    private LocalDateTime createTime;
+    private String email;
 
-    /**
-     * 更新时间
-     */
+    private String phone;
+
+    private Long departmentId;
+
+    private Long positionId;
+
+    private Boolean administratorFlag;
+
+    private Boolean disabledFlag;
+
+    private Boolean deletedFlag;
+
+    private String remark;
+
     private LocalDateTime updateTime;
 
-    /**
-     * 最后登录时间
-     */
-    private LocalDateTime lastLoginTime;
-
-    /**
-     * 最后登录IP
-     */
-    private String lastLoginIp;
+    private LocalDateTime createTime;
 }

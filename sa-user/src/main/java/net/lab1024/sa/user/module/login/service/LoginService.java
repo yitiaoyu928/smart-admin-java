@@ -2,6 +2,7 @@ package net.lab1024.sa.user.module.login.service;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.servlet.JakartaServletUtil;
 import jakarta.annotation.Resource;
@@ -21,6 +22,7 @@ import net.lab1024.sa.user.module.login.domain.request.UserResetPasswordForm;
 import net.lab1024.sa.user.module.login.domain.vo.UserLoginVO;
 import net.lab1024.sa.user.module.user.dao.UserMapper;
 import net.lab1024.sa.user.module.user.domain.entity.UserEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -46,6 +48,9 @@ public class LoginService {
     @Resource
     private SecurityPasswordService securityPasswordService;
 
+    @Value("${sa-user.register.default-department-id:1}")
+    private Long defaultDepartmentId;
+
     /**
      * 获取登录用户
      */
@@ -55,19 +60,19 @@ public class LoginService {
         }
         Long userId = Long.parseLong(loginId);
         UserEntity user = userMapper.selectById(userId);
-        if (user == null) {
+        if (user == null || Boolean.TRUE.equals(user.getDeletedFlag())) {
             return null;
         }
 
         RequestUserEntity requestUser = new RequestUserEntity();
         requestUser.setUserId(user.getUserId());
         requestUser.setUserType(UserTypeEnum.USER);
-        requestUser.setLoginName(user.getEmail()); // or phone
+        requestUser.setLoginName(StrUtil.blankToDefault(user.getLoginName(), StrUtil.blankToDefault(user.getEmail(), user.getPhone())));
         requestUser.setUserName(user.getNickname());
         requestUser.setAvatar(user.getAvatar());
         requestUser.setPhone(user.getPhone());
         requestUser.setEmail(user.getEmail());
-        requestUser.setDisabledFlag(user.getStatus() != 1);
+        requestUser.setDisabledFlag(Boolean.TRUE.equals(user.getDisabledFlag()));
         requestUser.setIp(request.getRemoteAddr());
         requestUser.setUserAgent(request.getHeader("User-Agent"));
 
@@ -116,13 +121,16 @@ public class LoginService {
         UserEntity user = new UserEntity();
         user.setEmail(form.getEmail());
         user.setPhone(form.getPhone());
+        user.setLoginName(StrUtil.blankToDefault(form.getEmail(), form.getPhone()));
         user.setNickname(form.getEmail().split("@")[0]); 
         user.setLoginPwd(SecurityPasswordService.getEncryptPwd(form.getPassword()));
+        user.setEmployeeUid(IdUtil.fastSimpleUUID());
+        user.setDepartmentId(defaultDepartmentId);
+        user.setAdministratorFlag(false);
+        user.setDisabledFlag(false);
+        user.setDeletedFlag(false);
         user.setCreateTime(LocalDateTime.now());
         user.setUpdateTime(LocalDateTime.now());
-        user.setStatus(1); // 启用
-        user.setLevel(1);
-        user.setPoints(0);
         
         userMapper.insert(user);
         
@@ -148,14 +156,9 @@ public class LoginService {
         }
 
         // 2. 查询用户
-        UserEntity user = null;
-        if (form.getLoginName().contains("@")) {
-            user = userMapper.selectByEmail(form.getLoginName());
-        } else {
-            user = userMapper.selectByPhone(form.getLoginName());
-        }
+        UserEntity user = userMapper.selectByLoginName(form.getLoginName());
 
-        if (user == null) {
+        if (user == null || Boolean.TRUE.equals(user.getDeletedFlag())) {
             logLogin(form.getLoginName(), LoginLogResultEnum.LOGIN_FAIL, "账号不存在");
             return ResponseDTO.userErrorParam("账号或密码错误");
         }
@@ -167,7 +170,7 @@ public class LoginService {
         }
 
         // 4. 校验状态
-        if (user.getStatus() != 1) {
+        if (Boolean.TRUE.equals(user.getDisabledFlag())) {
             logLogin(form.getLoginName(), LoginLogResultEnum.LOGIN_FAIL, "账号被禁用");
             return ResponseDTO.userErrorParam("账号已被禁用");
         }
@@ -176,9 +179,7 @@ public class LoginService {
         StpUtil.login(String.valueOf(user.getUserId()));
         
         // 6. 更新登录信息
-        user.setLastLoginTime(LocalDateTime.now());
-        HttpServletRequest request = getCurrentRequest();
-        user.setLastLoginIp(request == null ? null : JakartaServletUtil.getClientIP(request));
+        user.setUpdateTime(LocalDateTime.now());
         userMapper.updateById(user);
         
         // 记录登录日志
@@ -187,6 +188,7 @@ public class LoginService {
         // 7. 返回结果
         UserLoginVO vo = BeanUtil.copyProperties(user, UserLoginVO.class);
         vo.setToken(StpUtil.getTokenValue());
+        vo.setLevel(1);
         
         return ResponseDTO.ok(vo);
     }
