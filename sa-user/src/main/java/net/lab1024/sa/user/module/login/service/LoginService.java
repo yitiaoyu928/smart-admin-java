@@ -14,6 +14,7 @@ import net.lab1024.sa.base.module.support.captcha.domain.CaptchaForm;
 import net.lab1024.sa.base.module.support.loginlog.LoginLogResultEnum;
 import net.lab1024.sa.base.module.support.loginlog.LoginLogService;
 import net.lab1024.sa.base.module.support.loginlog.domain.LoginLogEntity;
+import net.lab1024.sa.base.common.util.SmartIpUtil;
 import net.lab1024.sa.base.module.support.securityprotect.service.SecurityPasswordService;
 import net.lab1024.sa.user.module.login.domain.RequestUserEntity;
 import net.lab1024.sa.user.module.login.domain.request.UserLoginForm;
@@ -159,19 +160,19 @@ public class LoginService {
         UserEntity user = userMapper.selectByLoginName(form.getLoginName());
 
         if (user == null || Boolean.TRUE.equals(user.getDeletedFlag())) {
-            logLogin(form.getLoginName(), LoginLogResultEnum.LOGIN_FAIL, "账号不存在");
+            logLogin(null, form.getLoginName(), LoginLogResultEnum.LOGIN_FAIL, "账号不存在");
             return ResponseDTO.userErrorParam("账号或密码错误");
         }
 
         // 3. 校验密码
         if (!SecurityPasswordService.matchesPwd(form.getPassword(), user.getLoginPwd())) {
-            logLogin(form.getLoginName(), LoginLogResultEnum.LOGIN_FAIL, "密码错误");
+            logLogin(user.getUserId(), form.getLoginName(), LoginLogResultEnum.LOGIN_FAIL, "密码错误");
             return ResponseDTO.userErrorParam("账号或密码错误");
         }
 
         // 4. 校验状态
         if (Boolean.TRUE.equals(user.getDisabledFlag())) {
-            logLogin(form.getLoginName(), LoginLogResultEnum.LOGIN_FAIL, "账号被禁用");
+            logLogin(user.getUserId(), form.getLoginName(), LoginLogResultEnum.LOGIN_FAIL, "账号被禁用");
             return ResponseDTO.userErrorParam("账号已被禁用");
         }
 
@@ -183,7 +184,7 @@ public class LoginService {
         userMapper.updateById(user);
         
         // 记录登录日志
-        logLogin(user.getNickname(), LoginLogResultEnum.LOGIN_SUCCESS, "登录成功");
+        logLogin(user.getUserId(), user.getNickname(), LoginLogResultEnum.LOGIN_SUCCESS, "登录成功");
 
         // 7. 返回结果
         UserLoginVO vo = BeanUtil.copyProperties(user, UserLoginVO.class);
@@ -235,16 +236,20 @@ public class LoginService {
     /**
      * 记录登录日志
      */
-    private void logLogin(String userName, LoginLogResultEnum result, String remark) {
+    private void logLogin(Long userId, String userName, LoginLogResultEnum result, String remark) {
         try {
             HttpServletRequest request = getCurrentRequest();
+            String ip = request == null ? null : JakartaServletUtil.getClientIP(request);
             LoginLogEntity logEntity = LoginLogEntity.builder()
+                    .userId(userId)
                     .userType(UserTypeEnum.USER.getValue())
                     .userName(userName)
-                    .loginIp(request == null ? null : JakartaServletUtil.getClientIP(request))
+                    .loginIp(ip)
+                    .loginIpRegion(SmartIpUtil.getRegion(ip))
                     .userAgent(request == null ? null : request.getHeader("User-Agent"))
                     .loginResult(result.getValue())
                     .remark(remark)
+                    .createTime(LocalDateTime.now())
                     .build();
             loginLogService.log(logEntity);
         } catch (Exception e) {

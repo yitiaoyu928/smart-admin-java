@@ -6,6 +6,9 @@ import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
 import net.lab1024.sa.base.common.domain.ResponseDTO;
 import net.lab1024.sa.base.common.enumeration.UserTypeEnum;
+import net.lab1024.sa.base.module.support.loginlog.LoginLogResultEnum;
+import net.lab1024.sa.base.module.support.loginlog.LoginLogService;
+import net.lab1024.sa.base.module.support.loginlog.domain.LoginLogVO;
 import net.lab1024.sa.base.module.support.securityprotect.service.SecurityPasswordService;
 import net.lab1024.sa.user.module.login.domain.RequestUserEntity;
 import net.lab1024.sa.user.module.user.dao.UserMapper;
@@ -25,6 +28,9 @@ public class UserService {
     @Resource
     private SecurityPasswordService securityPasswordService;
 
+    @Resource
+    private LoginLogService loginLogService;
+
     /**
      * 获取当前用户信息
      */
@@ -38,6 +44,10 @@ public class UserService {
         userVO.setStatus(Boolean.TRUE.equals(userEntity.getDisabledFlag()) ? 0 : 1);
         userVO.setLevel(1);
         userVO.setPoints(0);
+        LoginLogVO loginLogVO = loginLogService.queryLastByUserId(userId, UserTypeEnum.USER, LoginLogResultEnum.LOGIN_SUCCESS);
+        if (loginLogVO != null) {
+            userVO.setLastLoginTime(loginLogVO.getCreateTime());
+        }
         return ResponseDTO.ok(userVO);
     }
 
